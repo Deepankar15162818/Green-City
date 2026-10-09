@@ -1,0 +1,265 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GreenMap AI – Smart Urban Green Space Planning</title>
+<meta name="description" content="Academic prototype: data-driven urban green space planning and tree recommendation (simulated data).">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>:root{--forest:#1f4d3a;--leaf:#2f6f4f;--mint:#cfe8c4;--char:#1d2421;--paper:#f6f7f2;--card:#fff;--line:#dfe5da;--hi:#c0392b;--mid:#e0a21b;--lo:#2e8b57}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{margin:0;font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--char);background:var(--paper);overflow-x:hidden}
+h1,h2,h3{font-family:Georgia,"Times New Roman",serif;line-height:1.2;margin:0 0 .5em}
+h1{font-size:clamp(2rem,5vw,3.2rem)}h2{font-size:clamp(1.5rem,3vw,2rem)}h4{margin:1.1em 0 .3em}
+a{color:var(--leaf)}:focus-visible{outline:3px solid #f0b429;outline-offset:2px}
+header{position:sticky;top:0;z-index:1000;background:var(--forest);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:.6rem 1rem}
+.logo{font-family:Georgia,serif;font-weight:700;font-size:1.1rem;color:#fff;text-decoration:none}
+nav{display:flex;gap:.2rem;flex-wrap:wrap}nav a{color:#e6f2e2;text-decoration:none;padding:.35rem .6rem;border-radius:6px;font-size:.92rem}nav a:hover{background:rgba(255,255,255,.14)}
+#menu{display:none;background:none;border:1px solid #fff6;color:#fff;font-size:1.3rem;border-radius:6px;padding:.1rem .6rem}
+.demo{background:#f0b429;color:#2b2000;text-align:center;font-weight:600;font-size:.85rem;padding:.35rem}
+section{padding:3.5rem 1.2rem}.wrap{max-width:1100px;margin:auto}.alt{background:#eaf1e4}
+.hero{background:var(--forest);color:#fff}.hero p{max-width:60ch;color:#dcebd7}
+.btns{display:flex;gap:.6rem;flex-wrap:wrap;margin:1.2rem 0}
+.btn,button{font:inherit;cursor:pointer;border-radius:8px;border:0;padding:.65rem 1.1rem;background:var(--mint);color:var(--forest);font-weight:600;text-decoration:none;display:inline-block}
+.btn.ghost{background:transparent;color:#fff;border:1px solid #fff8}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.8rem;margin-top:1.8rem}
+.stats div{border-left:3px solid var(--mint);padding-left:.8rem}.stats b{display:block;font-size:1.6rem;font-family:Georgia,serif}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.2rem}.card h3{font-size:1.15rem}.card ul{padding-left:1.1rem;margin:.3rem 0}
+#map{height:480px;border-radius:12px;border:1px solid var(--line);margin:1rem 0}
+.legend{background:#fff;padding:.5rem .7rem;border-radius:8px;line-height:1.5;font-size:.82rem;box-shadow:0 1px 6px #0003}
+.tools{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+input,select{font:inherit;padding:.5rem .6rem;border:1px solid #b8c4b4;border-radius:8px;background:#fff;max-width:100%}
+.tools input[type=search]{flex:1;min-width:160px}
+.scroll{overflow-x:auto;margin-top:.8rem;background:#fff;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.92rem}th,td{text-align:left;padding:.55rem .7rem;border-bottom:1px solid var(--line)}th{background:#f1f5ed}
+.pill{padding:.1rem .55rem;border-radius:99px;font-size:.8rem;font-weight:700;color:#fff;white-space:nowrap}.pill.High{background:var(--hi)}.pill.Medium{background:#a97800}.pill.Low{background:var(--lo)}
+.mini{padding:.25rem .6rem;font-size:.82rem}
+.two2{display:grid;grid-template-columns:1fr 1.3fr;gap:1.2rem}
+form{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}form label{font-size:.85rem;font-weight:600;display:flex;flex-direction:column;gap:.2rem}form .full,form button{grid-column:1/-1}
+.big{display:flex;align-items:baseline;gap:.4rem;font-size:1.2rem}.big strong{font-size:3.2rem;font-family:Georgia,serif}.big span{margin-left:auto;font-weight:700}
+.big.High{color:var(--hi)}.big.Medium{color:#a97800}.big.Low{color:var(--lo)}
+.bar{display:grid;grid-template-columns:1fr 70px;gap:.1rem .6rem;margin:.4rem 0;font-size:.85rem}.bar i{grid-column:1;height:8px;background:var(--leaf);border-radius:4px}.bar b{grid-row:1/3;grid-column:2;text-align:right}
+.tree{padding:.5rem 0;border-bottom:1px solid var(--line)}.two{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.num{font-size:1.8rem;font-family:Georgia,serif;margin:0}
+.note,.err{background:#fff4d6;border-left:4px solid #f0b429;padding:.5rem .8rem;border-radius:6px;font-size:.88rem}.err{background:#fde8e5;border-color:var(--hi)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.8rem;margin-bottom:1rem}.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:.9rem}.kpi b{font-size:1.7rem;font-family:Georgia,serif;display:block}.kpi span{font-size:.85rem;color:#51605a}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem}.charts .card{height:320px}
+.flow{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}.flow span{background:#fff;border:1px solid var(--line);border-radius:8px;padding:.4rem .7rem;font-size:.88rem}.flow i{color:var(--leaf)}
+footer{background:var(--char);color:#cfd8d2;padding:1.5rem 1.2rem;font-size:.88rem}
+@media(max-width:820px){#menu{display:block}nav{display:none;position:absolute;top:100%;left:0;right:0;background:var(--forest);flex-direction:column;padding:.5rem 1rem}nav.open{display:flex}.two2{grid-template-columns:1fr}section{padding:2.4rem 1rem}}
+@media(max-width:480px){form,.two{grid-template-columns:1fr}#map{height:380px}.charts{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+.tools label{display:flex;flex-direction:column;font-size:.85rem;font-weight:600}
+</style></head><body>
+<header><a class="logo" href="#home">🌳 GreenMap AI</a><button id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="nav">☰</button>
+<nav id="nav" aria-label="Main"><a href="#home">Home</a><a href="#map-section">Map</a><a href="#analysis">Analysis</a><a href="#dashboard">Dashboard</a><a href="#trees">Trees</a><a href="#health">Public Health</a><a href="#social">Social Cohesion</a><a href="#jaipur">Jaipur</a><a href="#research">Research</a><a href="#about">About</a></nav></header>
+<div class="demo" role="status">DEMO MODE — SIMULATED DATA. Not official or municipal data.</div>
+<main>
+<section class="hero" id="home"><div class="wrap"><h1>Smart Urban Green Space Planning</h1>
+<p>Using environmental and urban data to identify high-priority opportunities for greener, healthier and more connected cities.</p>
+<p><em>Data-driven decisions for healthier, greener and more socially connected cities.</em></p>
+<div class="btns"><a class="btn" href="#map-section">Explore City Map</a><a class="btn ghost" href="#analysis">Analyze a Location</a><a class="btn ghost" href="#dashboard">View Dashboard</a></div>
+<div class="stats"><div><b>6</b>Environmental factors</div><div><b>0–100</b>Green Priority Score</div><div><b>18</b>Tree species</div><div><b>60</b>Simulated areas</div></div></div></section>
+
+<section><div class="wrap"><h2>The urban problem</h2><div class="grid">
+<div class="card"><h3>🏙️ Rapid urbanization</h3><p>Built-up land expands while vegetation shrinks.</p></div>
+<div class="card"><h3>🔥 Urban heat islands</h3><p>Hard surfaces keep cities warmer than surroundings.</p></div>
+<div class="card"><h3>🏭 Air pollution</h3><p>Traffic and industry raise exposure in dense areas.</p></div>
+<div class="card"><h3>🚶 Less outdoor activity</h3><p>Few shaded, walkable spaces reduce time outside.</p></div>
+<div class="card"><h3>🤝 Social isolation</h3><p>Fewer shared public spaces weaken neighbourhood ties.</p></div>
+<div class="card"><h3>⚖️ Unequal access</h3><p>Some neighbourhoods are far from any green space.</p></div></div>
+<h2 style="margin-top:2rem">Why green spaces matter</h2><div class="grid">
+<div class="card"><h3>Environment</h3><ul><li>Air purification</li><li>Temperature regulation</li><li>Carbon storage</li><li>Stormwater management</li><li>Biodiversity</li></ul></div>
+<div class="card"><h3>Public health</h3><ul><li>Physical activity</li><li>Mental health</li><li>Stress reduction</li><li>Heat protection</li><li>Cleaner air</li></ul></div>
+<div class="card"><h3>Social cohesion</h3><ul><li>Community interaction</li><li>Recreation</li><li>Shared spaces</li><li>Community participation</li><li>Social inclusion</li></ul></div></div></div></section>
+
+<section class="alt" id="map-section"><div class="wrap"><h2>Interactive city map</h2>
+<p class="note">Jaipur sandbox: locality names are real, but every value (temperature, pollution, green cover, etc.) is SIMULATED and not measured by Nagar Nigam Jaipur or any agency. Park positions are approximate.</p>
+<div class="tools"><fieldset style="border:0;padding:0;margin:0"><legend class="sr" style="position:absolute;left:-9999px">Data mode</legend>
+<label><input type="radio" name="mode" value="demo" checked> Demo Data</label> <label><input type="radio" name="mode" value="live"> Future Live Data</label></fieldset>
+<button id="geo" type="button">Use my location</button><span id="modeMsg" role="status"></span></div>
+<div id="map" role="region" aria-label="Map of simulated priority zones"></div>
+<div class="tools"><input id="q" type="search" placeholder="Search area or tree" aria-label="Search area or tree">
+<select id="filter" aria-label="Filter"><option value="all">All areas</option><option>High</option><option>Medium</option><option>Low</option><option value="poll">High pollution (≥70)</option><option value="heat">High heat (≥37°C)</option><option value="green">Low greenery (≤12%)</option></select>
+<select id="sort" aria-label="Sort by"><option value="priorityScore">Sort: Priority score</option><option value="pollutionIndex">Sort: Pollution</option><option value="temperature">Sort: Temperature</option><option value="greenCoverage">Sort: Green coverage (low first)</option><option value="populationDensity">Sort: Population density</option></select><span id="count"></span><button id="csv" type="button">Download simulated CSV</button></div>
+<div class="scroll"><table><thead><tr><th>Area</th><th>Priority</th><th>Temp</th><th>Pollution</th><th>Green</th><th>Suggested tree</th><th></th></tr></thead><tbody id="rows"></tbody></table></div></div></section>
+
+<section id="analysis"><div class="wrap"><h2>Location analysis</h2><div class="two2">
+<div><form id="form"><label class="full">Location / area<input id="f-name" value="My location" maxlength="60"></label>
+<label>Temperature (°C)<input id="f-temp" type="number" step="0.1" required></label><label>Pollution index (0–100)<input id="f-poll" type="number" required></label>
+<label>Green coverage (%)<input id="f-green" type="number" required></label><label>Population density (/km²)<input id="f-pop" type="number" required></label>
+<label>Open space (%)<input id="f-open" type="number" required></label><label>Traffic (0–100)<input id="f-traf" type="number" required></label>
+<label>Pedestrian activity (0–100)<input id="f-ped" type="number" required></label><label>Distance to green space (km)<input id="f-dist" type="number" step="0.1" required></label>
+<label>Planting context<select id="f-ctx"><option value="road">Roadside</option><option value="res">Residential</option><option value="park">Park</option><option value="school">School</option></select></label>
+<label>Water availability<select id="f-water"><option value="1">Low</option><option value="2" selected>Medium</option><option value="3">High</option></select></label>
+<label class="full">Desired benefit<select id="f-goal"><option value="heat">Heat reduction / shade</option><option value="air">Air quality</option><option value="bio">Biodiversity</option></select></label>
+<button class="full" type="submit" style="background:var(--forest);color:#fff">Analyze Location</button><button class="full" type="button" id="demoBtn">Load Zone A demo</button></form></div>
+<div class="card" id="result" aria-live="polite"></div></div></div></section>
+
+<section class="alt" id="dashboard"><div class="wrap"><h2>Dashboard</h2><div class="kpis" id="kpis"></div>
+<div class="charts" id="charts"><div class="card"><canvas id="c1" aria-label="Top 10 pollution by area"></canvas></div><div class="card"><canvas id="c2" aria-label="Priority distribution"></canvas></div><div class="card"><canvas id="c3" aria-label="Recommended tree types"></canvas></div><div class="card"><canvas id="c4" aria-label="Health, social and green averages"></canvas></div></div>
+<p><small>All values come from the simulated dataset.</small></p></div></section>
+
+<section id="trees"><div class="wrap"><h2>Tree database</h2><p class="note">Prototype / illustrative ratings (Low–High). Not scientifically exact; expert ecological validation is required before planting.</p>
+<div class="scroll"><table><thead><tr><th>Tree</th><th>Heat tol.</th><th>Pollution tol.</th><th>Water need</th><th>Space</th><th>Places</th><th>Main benefit</th></tr></thead><tbody id="treeRows"></tbody></table></div></div></section>
+
+<section class="alt" id="health"><div class="wrap"><h2>Public health</h2><div class="grid">
+<div class="card"><h3>Physical health</h3><p>Shaded, green routes can support walking, cycling and outdoor recreation, and may reduce heat exposure.</p></div>
+<div class="card"><h3>Mental health</h3><p>Nature exposure is associated with stress reduction and psychological restoration.</p></div>
+<div class="card"><h3>Environmental health</h3><p>Vegetation may contribute to better air quality, cooler temperatures and lower noise.</p></div></div><p><small>No medical claims are made. The Health Potential score is a prototype indicator.</small></p></div></section>
+
+<section id="social"><div class="wrap"><h2>Social cohesion</h2><div class="grid">
+<div class="card"><h3>Meeting places</h3><p>Parks can support community interaction, events and neighbourhood identity.</p></div>
+<div class="card"><h3>All ages</h3><p>Shared spaces can encourage intergenerational contact and social inclusion.</p></div>
+<div class="card"><h3>Participation</h3><p>Community gardens and planting drives can invite local involvement.</p></div></div>
+<p><b>Prototype Social Cohesion Indicator</b> = 30% population density + 25% pedestrian activity + 25% distance from green space + 20% open space.</p></div></section>
+
+<section id="jaipur"><div class="wrap"><h2>Jaipur context</h2>
+<p class="note">Public context gathered for this prototype. The app is NOT connected to Nagar Nigam Jaipur. Please re-verify each point on official sources before citing it.</p>
+<div class="grid"><div class="card"><h3>Administrative structure</h3><p>A 2019 state notification split Nagar Nigam Jaipur into Heritage (100 wards) and Greater (150 wards), 250 wards in total. Check the current structure on the official website before citing it.</p></div>
+<div class="card"><h3>Green-cover target</h3><p>An older news report states that Jaipur Master Plan 2025 expects 20% green cover while the city had about 11.3%. Use it as context only; confirm with JDA / official figures.</p></div>
+<div class="card"><h3>Ward-level data path</h3><p>A 150-ward boundary file (KML) for Greater Jaipur is listed on the OpenCity open-data portal. Joining such boundaries with air-quality and tree data is a realistic future integration.</p></div></div>
+<div class="card" style="margin-top:1rem"><h3>Green-cover gap calculator (illustrative)</h3><div class="tools"><label>Area (km²) <input id="g-area" type="number" value="10" min="0.1" step="0.1"></label><label>Current green % <input id="g-green" type="number" value="11.3" min="0" max="100" step="0.1"></label><label>Target green % <input id="g-target" type="number" value="20" min="0" max="100" step="0.1"></label><button id="gapBtn" type="button">Calculate</button></div><p id="gapOut" class="note" aria-live="polite">Enter values and press Calculate.</p></div></div></section>
+<section class="alt" id="research"><div class="wrap"><h2>Research insights</h2>
+<h3>Methodology</h3><div class="flow"><span>Data collection</span><i>→</i><span>Cleaning</span><i>→</i><span>Exploratory analysis</span><i>→</i><span>Feature selection</span><i>→</i><span>Scoring / recommendation</span><i>→</i><span>GIS mapping</span><i>→</i><span>Visualization</span><i>→</i><span>Interpretation</span></div>
+<div class="grid" style="margin-top:1rem"><div class="card"><h3>Research questions</h3><ol><li>How can urban environmental data help prioritize green infrastructure?</li><li>How can green spaces contribute to public health?</li><li>How can they support social cohesion?</li><li>Which factors should influence tree recommendation?</li><li>How can GIS visualization support planning?</li></ol></div>
+<div class="card"><h3>Green Priority Score</h3><p>Pollution 25% + Temperature 20% + Low green coverage 20% + Population density 15% + Open space 10% + Traffic/pedestrian 10%. Each factor is normalized to 0–100. High ≥ 60, Medium 45–59, Low &lt; 45. This is a <b>Rule-Based Green Priority Model</b>, not machine learning.</p></div>
+<div class="card"><h3>Data sources</h3><p><b>Now:</b> simulated sample data (seeded generator in js/data.js), OpenStreetMap tiles.<br><b>Possible later:</b> municipal GIS, tree census, air-quality stations, weather data, satellite imagery. <em>Designed for future municipal GIS/API integration.</em></p></div></div>
+<h3 style="margin-top:1.5rem">Future municipal integration</h3><div class="flow"><span>Municipal GIS/API</span><i>→</i><span>Ingestion</span><i>→</i><span>Cleaning</span><i>→</i><span>Feature engineering</span><i>→</i><span>Green Priority Model</span><i>→</i><span>Tree recommendation</span><i>→</i><span>GIS visualization</span><i>→</i><span>Decision dashboard</span></div>
+<p><b>Future ML:</b> Random Forest, XGBoost, regression or clustering for green priority, heat vulnerability and tree suitability; later satellite imagery and remote sensing.</p></div></section>
+
+<section id="about"><div class="wrap"><h2>Limitations &amp; about</h2><div class="grid">
+<div class="card"><h3>Limitations</h3><ul><li>Simulated data, no live municipal connection</li><li>No tree survival prediction</li><li>Scores and ratings are illustrative</li><li>Tree choice needs expert validation</li><li>Real use needs validated data and permissions</li></ul></div>
+<div class="card"><h3>About</h3><p><b>Smart Urban Green Space Planning &amp; Tree Recommendation System</b><br>Domain: AI &amp; Data Science / GIS / Urban Sustainability<br>Tech: HTML, CSS, JavaScript, Leaflet, OpenStreetMap, Chart.js<br>Academic prototype.</p></div></div></div></section>
+</main><footer>GreenMap AI – academic prototype. Simulated data. © OpenStreetMap contributors.</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>/* GreenMap AI - data + logic (no DOM here). ALL DATA IS SIMULATED. */
+const WEIGHTS={poll:.25,temp:.20,green:.20,pop:.15,open:.10,mob:.10};
+const LABELS={poll:'Pollution',temp:'Temperature',green:'Low green coverage',pop:'Population density',open:'Open space',mob:'Traffic + pedestrians'};
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+// Tree: name, scientific, heat, pollution, water, space, biodiversity (1=low..3=high; illustrative), places, benefit
+const TREES=[
+['Neem','Azadirachta indica',3,3,1,2,2,'road,res,school','Dense shade, dust interception'],
+['Peepal','Ficus religiosa',3,2,2,3,3,'park,road','Large canopy, wildlife support'],
+['Banyan','Ficus benghalensis',3,3,2,3,3,'park','Very large shade canopy'],
+['Arjun','Terminalia arjuna',2,2,3,3,2,'park,road','Good near water, shade'],
+['Ashoka','Polyalthia longifolia',2,3,2,1,1,'res,school,road','Narrow form, fits tight spaces'],
+['Gulmohar','Delonix regia',3,1,2,2,2,'park,road','Wide shade, seasonal flowers'],
+['Jamun','Syzygium cumini',2,2,3,2,3,'park,res','Fruit for birds and people'],
+['Amaltas','Cassia fistula',3,2,1,2,2,'road,park','Drought-hardy, flowering'],
+['Kachnar','Bauhinia variegata',2,2,2,1,2,'res,school','Small tree, flowers'],
+['Mango','Mangifera indica',2,2,2,3,3,'park,res','Shade and fruit'],
+['Indian Almond','Terminalia catappa',2,3,2,3,2,'road','Broad canopy for streets'],
+['Kadamba','Neolamarckia cadamba',2,2,3,3,3,'park','Fast growing shade'],
+['Shisham','Dalbergia sissoo',3,2,1,3,2,'road,park','Hardy roadside tree'],
+['Amla','Phyllanthus emblica',2,2,1,1,2,'res,school','Compact, edible fruit'],
+['Bakul','Mimusops elengi',2,3,2,2,2,'road,res,school','Evergreen shade'],
+['Palash','Butea monosperma',3,2,1,2,2,'park','Tolerates dry, hot sites'],
+['Tamarind','Tamarindus indica',3,2,1,3,2,'road,park','Long-lived, heat tolerant'],
+['Mahua','Madhuca longifolia',3,2,1,3,2,'park','Dry-climate tree, wildlife food']
+].map(a=>({name:a[0],sci:a[1],heat:a[2],poll:a[3],water:a[4],space:a[5],bio:a[6],places:a[7].split(','),benefit:a[8]}));
+const norm=d=>({poll:clamp(d.pollutionIndex,0,100),temp:clamp((d.temperature-25)/20*100,0,100),green:100-clamp(d.greenCoverage,0,100),
+ pop:clamp((d.populationDensity-2000)/28000*100,0,100),open:clamp(d.openSpace,0,100),mob:clamp((d.trafficIntensity+d.pedestrianActivity)/2,0,100)});
+function score(d){const n=norm(d),parts={};let t=0;for(const k in WEIGHTS){parts[k]=n[k]*WEIGHTS[k];t+=parts[k];}return{score:Math.round(clamp(t,0,100)),parts,n};}
+const priority=s=>s>=60?'High':s>=45?'Medium':'Low';
+const access=d=>clamp(d.existingGreenSpaceDistance/3*100,0,100);
+const health=d=>{const n=norm(d);return Math.round(.35*n.temp+.35*n.poll+.3*access(d));};
+const social=d=>{const n=norm(d);return Math.round(.3*n.pop+.25*d.pedestrianActivity+.25*access(d)+.2*n.open);};
+function recommend(d,o){o=o||{};const n=norm(d),sp=d.openSpace<20?1:d.openSpace<45?2:3,w=o.water||2,ctx=o.context||'road',goal=o.goal||'heat';
+ return TREES.map(t=>{let s=t.heat*n.temp/100*3+t.poll*n.poll/100*3;const why=[];
+  if(t.space>sp){s-=4;}else{s+=1;why.push('fits the available space');}
+  if(t.water>w){s-=3;}else why.push('water need is manageable');
+  if(t.places.includes(ctx)){s+=2;why.push('suits '+({road:'roadside',res:'residential',park:'park',school:'school'}[ctx])+' planting');}
+  if(goal==='heat'&&t.heat===3){s+=2;why.push('good heat tolerance');}
+  if(goal==='air'&&t.poll===3){s+=2;why.push('tolerates polluted sites');}
+  if(goal==='bio'&&t.bio===3){s+=2;why.push('high biodiversity value');}
+  return{tree:t,suit:Math.round(clamp(s/23*100+20,15,95)),why};
+ }).sort((a,b)=>b.suit-a.suit).slice(0,3);}
+function buildLocations(){let seed=42;const r=()=>(seed=seed*16807%2147483647)/2147483647;
+ const names=['Malviya Nagar','Vaishali Nagar','Mansarovar','C-Scheme','Raja Park','Jhotwara','Sanganer','Jagatpura','Pratap Nagar','Bani Park','Sodala','Vidhyadhar Nagar'];
+ const out=[{id:1,areaName:'Zone A (demo, central Jaipur)',latitude:26.9124,longitude:75.7873,temperature:39,pollutionIndex:82,greenCoverage:8,populationDensity:24000,openSpace:30,trafficIntensity:85,pedestrianActivity:70,existingGreenSpaceDistance:2.4}];
+ for(let i=2;i<=60;i++){const u=r(),v=r();out.push({id:i,areaName:names[i%12]+' – Sim. zone '+(Math.floor(i/12)+1),
+  latitude:+(26.82+r()*.17).toFixed(5),longitude:+(75.70+r()*.18).toFixed(5),
+  temperature:+(30+u*11+v*2).toFixed(1),pollutionIndex:Math.round(clamp(25+u*60+v*12,10,98)),greenCoverage:Math.round(clamp(38-u*30+v*8,2,60)),
+  populationDensity:Math.round(3000+u*23000+v*3000),openSpace:Math.round(5+r()*50),trafficIntensity:Math.round(clamp(20+u*60+v*15,5,98)),
+  pedestrianActivity:Math.round(clamp(20+r()*70,5,98)),existingGreenSpaceDistance:+(.2+r()*2.6).toFixed(1)});}
+ return out.map(d=>{const s=score(d);const rec=recommend(d,{context:'road'})[0];
+  return Object.assign(d,{priorityScore:s.score,priority:priority(s.score),recommendedTree:rec.tree.name,healthPotential:health(d),socialCohesionPotential:social(d)});});}
+const GREEN_SPACES=[[26.9004,75.8000,'Central Park (approx. location)'],[26.9120,75.8190,'Ram Niwas Bagh (approx. location)'],[26.8720,75.8200,'Jhalana forest area (approx. location)']];
+const LOCATIONS=buildLocations();
+if(typeof module!=='undefined')module.exports={score,recommend,LOCATIONS,TREES,priority,health,social};
+</script><script>(function(){
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const COL={High:'#c0392b',Medium:'#e0a21b',Low:'#2e8b57'};
+let map,groups={},pin,list=LOCATIONS.slice();
+$('#menu').onclick=()=>{const o=$('#nav').classList.toggle('open');$('#menu').setAttribute('aria-expanded',o);};
+$$('#nav a').forEach(a=>a.onclick=()=>$('#nav').classList.remove('open'));
+$$('input[name=mode]').forEach(r=>r.onchange=()=>{const live=$('input[name=mode]:checked').value==='live';
+ $('#modeMsg').textContent=live?'Municipal/API integration is not connected in this prototype. Showing demo data.':'';
+ if(live)$('input[name=mode][value=demo]').checked=true;});
+function popup(d){return `<b>${esc(d.areaName)}</b><br>Green Priority Score: <b>${d.priorityScore}/100</b> (${d.priority})<br>Temperature: ${d.temperature}°C<br>Pollution Index: ${d.pollutionIndex}<br>Green Coverage: ${d.greenCoverage}%<br>Recommended: ${esc(d.recommendedTree)}<br><button class="mini" data-id="${d.id}">Analyze this location</button><br><small>Simulated data</small>`;}
+function initMap(){
+ if(typeof L==='undefined'){$('#map').innerHTML='<p class="err">The map could not load (check your internet connection). The rest of the site still works.</p>';return;}
+ map=L.map('map').setView([26.9124,75.7873],12);
+ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap contributors'}).addTo(map);
+ ['High','Medium','Low'].forEach(p=>groups[p]=L.layerGroup().addTo(map));
+ const gs=L.layerGroup().addTo(map);
+ GREEN_SPACES.forEach(g=>L.circle([g[0],g[1]],{radius:450,color:'#1f6b3f',fillColor:'#7ccf8f',fillOpacity:.5}).bindTooltip('🌳 '+g[2]).addTo(gs));
+ L.control.layers(null,{'🔴 High priority':groups.High,'🟡 Medium priority':groups.Medium,'🟢 Low priority':groups.Low,'🌳 Existing green space':gs}).addTo(map);
+ const lg=L.control({position:'bottomleft'});lg.onAdd=()=>{const e=L.DomUtil.create('div','legend');e.innerHTML='🔴 High priority<br>🟡 Medium priority<br>🟢 Low priority<br>🌳 Existing green space<br>📍 Analyzed location';return e;};lg.addTo(map);
+ map.on('popupopen',e=>{const b=e.popup.getElement().querySelector('.mini');if(b)b.onclick=()=>{loadIntoForm(+b.dataset.id);$('#analysis').scrollIntoView({behavior:'smooth'});};});
+ drawMarkers();
+}
+function drawMarkers(){if(!map)return;Object.values(groups).forEach(g=>g.clearLayers());
+ list.forEach(d=>L.circleMarker([d.latitude,d.longitude],{radius:8,color:'#fff',weight:1.5,fillColor:COL[d.priority],fillOpacity:.9}).bindPopup(popup(d)).addTo(groups[d.priority]));}
+function applyList(){const q=$('#q').value.trim().toLowerCase(),f=$('#filter').value,s=$('#sort').value;
+ list=LOCATIONS.filter(d=>(!q||d.areaName.toLowerCase().includes(q)||d.recommendedTree.toLowerCase().includes(q))&&
+  (f==='all'||(['High','Medium','Low'].includes(f)?d.priority===f:f==='poll'?d.pollutionIndex>=70:f==='heat'?d.temperature>=37:d.greenCoverage<=12)));
+ list.sort((a,b)=>s==='greenCoverage'?a[s]-b[s]:b[s]-a[s]);
+ $('#count').textContent=list.length+' of '+LOCATIONS.length+' areas';
+ $('#rows').innerHTML=list.length?list.slice(0,40).map(d=>`<tr><td>${esc(d.areaName)}</td><td><span class="pill ${d.priority}">${d.priorityScore} ${d.priority}</span></td><td>${d.temperature}°C</td><td>${d.pollutionIndex}</td><td>${d.greenCoverage}%</td><td>${esc(d.recommendedTree)}</td><td><button class="mini" data-id="${d.id}">View</button></td></tr>`).join(''):'<tr><td colspan="7">No areas match. Clear the search or filter.</td></tr>';
+ $$('#rows .mini').forEach(b=>b.onclick=()=>{const d=LOCATIONS.find(x=>x.id==b.dataset.id);if(map)map.flyTo([d.latitude,d.longitude],14);$('#map').scrollIntoView({behavior:'smooth'});loadIntoForm(d.id,true);});
+ drawMarkers();}
+['q','filter','sort'].forEach(i=>$('#'+i).addEventListener('input',applyList));
+const F={name:'areaName',temp:'temperature',poll:'pollutionIndex',green:'greenCoverage',pop:'populationDensity',open:'openSpace',traf:'trafficIntensity',ped:'pedestrianActivity',dist:'existingGreenSpaceDistance'};
+function loadIntoForm(id,quiet){const d=LOCATIONS.find(x=>x.id==id);if(!d)return;for(const k in F)$('#f-'+k).value=d[F[k]];analyze(!!quiet,d);}
+function analyze(quiet,loc){
+ const d={};let bad=null;
+ for(const k in F){const v=$('#f-'+k).value;d[F[k]]=k==='name'?(v||'My location'):parseFloat(v);if(k!=='name'&&isNaN(d[F[k]]))bad='Please fill in every number.';}
+ const R={temperature:[10,55,'Temperature 10–55°C'],pollutionIndex:[0,100,'Pollution 0–100'],greenCoverage:[0,100,'Green coverage 0–100%'],populationDensity:[0,60000,'Population density 0–60000'],openSpace:[0,100,'Open space 0–100%'],trafficIntensity:[0,100,'Traffic 0–100'],pedestrianActivity:[0,100,'Pedestrians 0–100'],existingGreenSpaceDistance:[0,10,'Distance 0–10 km']};
+ if(!bad)for(const k in R)if(d[k]<R[k][0]||d[k]>R[k][1])bad='Out of range: '+R[k][2]+'.';
+ const out=$('#result');if(bad){out.innerHTML='<p class="err">'+bad+'</p>';return;}
+ const s=score(d),p=priority(s.score),rec=recommend(d,{context:$('#f-ctx').value,water:+$('#f-water').value,goal:$('#f-goal').value}),h=health(d),so=social(d);
+ const act={High:'High-priority green intervention: multi-layer planting, a shade corridor and a pocket park where space allows.',Medium:'Targeted planting along streets and public edges; consider a small community green space.',Low:'Protect and maintain existing greenery; plant selectively to keep connectivity.'}[p];
+ const bars=Object.keys(WEIGHTS).map(k=>`<div class="bar"><span>${LABELS[k]} (${WEIGHTS[k]*100}%)</span><i style="width:${Math.round(s.n[k])}%"></i><b>${s.parts[k].toFixed(1)} pts</b></div>`).join('');
+ out.innerHTML=`<div class="big ${p}"><strong>${s.score}</strong>/100<span>${p} priority</span></div><p class="note">Illustrative output of the Rule-Based Green Priority Model. Not an official recommendation.</p>
+ <h4>How the score was calculated</h4>${bars}<p><small>Each factor is scaled 0–100, multiplied by its weight, then added.</small></p>
+ <h4>Suggested intervention</h4><p>${act}</p>
+ <h4>Recommended trees (illustrative suitability)</h4>${rec.map(r=>`<div class="tree"><b>${r.tree.name}</b> <em>${r.tree.sci}</em> <span class="pill Low">${r.suit}%</span><br><small>${r.tree.benefit}. Why: ${r.why.join(', ')||'general suitability'}.</small></div>`).join('')}
+ <h4>Possible benefits (qualitative)</h4><p>Trees may contribute to shade and local cooling, pollutant interception, carbon storage, stormwater uptake and habitat. Actual effects depend on species, density and local conditions.</p>
+ <div class="two"><div><h4>Health potential</h4><p class="num">${h}/100</p><small>Prototype indicator: heat + pollution + low access to green space.</small></div><div><h4>Social cohesion potential</h4><p class="num">${so}/100</p><small>Prototype Social Cohesion Indicator.</small></div></div>`;
+ if(map&&loc){if(pin)pin.remove();pin=L.marker([loc.latitude,loc.longitude]).addTo(map).bindPopup('📍 Analyzed: '+esc(loc.areaName));}
+ if(!quiet)out.scrollIntoView({behavior:'smooth',block:'nearest'});}
+$('#form').onsubmit=e=>{e.preventDefault();analyze(false);};
+$('#demoBtn').onclick=()=>loadIntoForm(1);
+$('#geo').onclick=()=>{const m=()=>{$('#modeMsg').textContent='Live location is unavailable. Demo mode is being used.';};if(!navigator.geolocation||!map)return m();navigator.geolocation.getCurrentPosition(p=>map.flyTo([p.coords.latitude,p.coords.longitude],13),m);};
+$('#treeRows').innerHTML=TREES.map(t=>{const L3=['Low','Medium','High'];return `<tr><td><b>${t.name}</b><br><em>${t.sci}</em></td><td>${L3[t.heat-1]}</td><td>${L3[t.poll-1]}</td><td>${L3[t.water-1]}</td><td>${['Small','Medium','Large'][t.space-1]}</td><td>${t.places.join(', ')}</td><td>${t.benefit}</td></tr>`;}).join('');
+function dash(){const n=LOCATIONS.length,avg=k=>(LOCATIONS.reduce((a,d)=>a+d[k],0)/n).toFixed(1);
+ const hi=LOCATIONS.filter(d=>d.priority==='High').length,trees=new Set(LOCATIONS.map(d=>d.recommendedTree)).size;
+ $('#kpis').innerHTML=[['Areas analyzed',n],['High priority',hi],['Avg green score',avg('priorityScore')],['Avg pollution',avg('pollutionIndex')],['Avg heat (°C)',avg('temperature')],['Tree types',trees]].map(k=>`<div class="kpi"><b>${k[1]}</b><span>${k[0]}</span></div>`).join('');
+ if(typeof Chart==='undefined'){$('#charts').innerHTML='<p class="err">Charts could not load (check your internet connection).</p>';return;}
+ const top=LOCATIONS.slice().sort((a,b)=>b.pollutionIndex-a.pollutionIndex).slice(0,10);
+ const dist=['High','Medium','Low'].map(p=>LOCATIONS.filter(d=>d.priority===p).length);
+ const cnt={};LOCATIONS.forEach(d=>cnt[d.recommendedTree]=(cnt[d.recommendedTree]||0)+1);
+ const mk=(id,type,labels,data,colors,extra)=>new Chart($(id),{type,data:{labels,datasets:[{data,backgroundColor:colors}]},options:Object.assign({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:type==='doughnut',position:'bottom'}}},extra||{})});
+ mk('#c1','bar',top.map(d=>d.areaName),top.map(d=>d.pollutionIndex),'#2f6f4f',{indexAxis:'y'});
+ mk('#c2','doughnut',['High','Medium','Low'],dist,['#c0392b','#e0a21b','#2e8b57']);
+ mk('#c3','bar',Object.keys(cnt),Object.values(cnt),'#7ccf8f');
+ mk('#c4','bar',['Avg health potential','Avg social cohesion','Avg green coverage %'],[avg('healthPotential'),avg('socialCohesionPotential'),avg('greenCoverage')],['#2f6f4f','#7ccf8f','#a8b5ab'],{scales:{y:{beginAtZero:true,max:100}}});}
+$('#csv').onclick=()=>{const k=Object.keys(LOCATIONS[0]);const t=[k.join(',')].concat(LOCATIONS.map(d=>k.map(x=>'"'+d[x]+'"').join(','))).join('\n');const b=new Blob([t],{type:'text/csv'}),u=URL.createObjectURL(b),l=document.createElement('a');l.href=u;l.download='simulated_jaipur_locations.csv';l.click();URL.revokeObjectURL(u);};
+$('#gapBtn').onclick=()=>{const A=parseFloat($('#g-area').value),G=parseFloat($('#g-green').value),T=parseFloat($('#g-target').value),o=$('#gapOut');
+ if(!(A>0)||isNaN(G)||isNaN(T)||G<0||G>100||T<0||T>100){o.className='err';o.textContent='Enter area above 0 km² and percentages between 0 and 100.';return;}
+ const ha=(T-G)/100*A*100;o.className='note';o.textContent=ha>0?'To reach '+T+'% green cover from '+G+'%, about '+ha.toFixed(0)+' ha ('+(ha/100).toFixed(1)+' km²) of additional green area would be needed in '+A+' km². Illustrative arithmetic only.':'Current green cover already meets this target.';};
+try{initMap();}catch(e){$('#map').innerHTML='<p class="err">The map could not start. Please refresh the page.</p>';}
+applyList();dash();loadIntoForm(1,true);
+})();
+</script></body></html>
